@@ -1,6 +1,10 @@
 <?php   error_reporting(E_ALL);
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// configuration
+$baseURL = "https://fogbugz.klean.dk"; // should not include trailing slash
+$defaultDays = 90;
+
+///////////////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2013, Anders Borum
 // All rights reserved.
 //
@@ -23,11 +27,7 @@
 //    ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 //    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// configuration
-$baseURL = "https://fogbugz.klean.dk"; // should not include trailing slash
-$defaultDays = 90;
+///////////////////////////////////////////////////////////////////////////////////////
 
 $daysBack = isset($_REQUEST['days']) ? intval($_REQUEST['days']) : $defaultDays;
 $server = parse_url($baseURL, PHP_URL_HOST);
@@ -43,12 +43,8 @@ function calLine($line) {
 }
 
 // Format date-string in ISO 8601 UTC format, e.g. 2013-01-21T14:24:06Z into what
-// iCal expects, e.g. 20130121T142406Z subtracting the number of seconds.
-function formatCalDate($date, $secs = 0)
-{
-    $time = strtotime($date) - $secs;
-    $date = gmdate('c', $time);
-
+// iCal expects, e.g. 20130121T142406Z 
+function formatCalDate($date) {
     // Luckily conversion between ISO 8601 and iCal dates
     // amounts to fixing time-zone indicator and stripping dashes & colons.
     $date = str_replace('+00:00', 'Z', $date);
@@ -99,7 +95,7 @@ while ($reader->read()) {
                 }
 
                 if ($code == 3) {
-                    // we need token, which is requested when redirect such that there is no token
+                    // we need token, which is requested after redirect where we will ask for login
                     header('HTTP/1.0 301 Moved Permanently');
                     $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS']) ? 'https' : 'http';
                     $host = $_SERVER['HTTP_HOST'];
@@ -115,7 +111,7 @@ while ($reader->read()) {
 
             // login response
             if ($name == 'token') {
-                // token from login received, we redirect to URL including token
+                // token from login received, and we redirect to URL including token
 
                 // We try to allow webcal scheme with https by specifying port number,
                 // and this has not yet been tested;
